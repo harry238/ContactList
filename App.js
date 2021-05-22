@@ -4,8 +4,9 @@ import { Text, View, StatusBar } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import ProfileScreen from './src/screens/Home/Profile';
 import ContactListScreen from './src/screens/Home/ContactList';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { Provider } from "react-redux";
+import thunk from 'redux-thunk';
 
 const Stack = createStackNavigator();
 
@@ -15,29 +16,30 @@ const initialState = {
   DummyData: []
 }
 const reducer = (state = initialState, action) => {
-  const index = -1;
+  let index = -1;
   switch (action.type) {
-    case 'FETCH_PRODUCTS_BEGIN':
+    case 'FETCH_USERS_BEGIN':
       // Mark the state as "loading" so we can show a spinner or something
       // Also, reset any errors. We're starting fresh.
 
-      console.log(11);
+      // console.log(11);
       return {
         ...state,
         loading: true,
         error: null
       };
 
-    case 'FETCH_PRODUCTS_SUCCESS':
+    case 'FETCH_USERS_SUCCESS':
       // All done: set loading "false".
       // Also, replace the items with the ones from the server
+      // console.log(action.payload.users);
       return {
         ...state,
         loading: false,
         DummyData: action.payload.users
       };
 
-    case 'FETCH_PRODUCTS_FAILURE':
+    case 'FETCH_USERS_FAILURE':
       // The request failed, but it did stop, so set loading to "false".
       // Save the error, and we can display it somewhere
       // Since it failed, we don't have items to display anymore, so set it empty.
@@ -49,14 +51,19 @@ const reducer = (state = initialState, action) => {
         error: action.payload.error,
         DummyData: []
       };
+
     case 'EDIT_USER':
       var data = state.DummyData;
-      index = data.findIndex(obj => obj.id === action.payload.id);
-      state.DummyData = index >= 0 ? [
-        ...data.slice(0, index),
-        ...data.slice(index + 1)
-      ] : array;
-      return { DummyData: state.DummyData };
+      index = data.findIndex(obj => obj.id === action.payload.userDetails.id);
+      if (index >= 0) {
+        data[index] = action.payload.userDetails;
+      }
+      const updatedData = data;
+      return { 
+        ...state,
+        DummyData: updatedData 
+      };
+
     case 'DELETE_USER':
       var data = state.DummyData;
       index = data.findIndex(obj => obj.id === action.payload.id);
@@ -70,7 +77,7 @@ const reducer = (state = initialState, action) => {
       return state;
   }
 }
-const store = createStore(reducer);
+const store = createStore(reducer, applyMiddleware(thunk));
 
 
 

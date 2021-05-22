@@ -35,9 +35,9 @@ class ContactListScreen extends Component {
     }
     componentDidMount() {
         console.log(11);
-        this.props.dispatch();
-        fetchUserList();
-        console.log(12);
+        this.props.dispatch(fetchUserList());
+        // fetchUserList();
+        // console.log(12);
         // this.load();
     }
     load = () => {
@@ -57,8 +57,8 @@ class ContactListScreen extends Component {
         return (
             <TouchableOpacity activeOpacity={0.5} onLongPress={() => {
                 Alert.alert(
-                    "Alert Title",
-                    "My Alert Msg",
+                    "Alert",
+                    "Are you sure you want to deleye the contact?",
                     [
                         {
                             text: "Cancel",
@@ -71,8 +71,14 @@ class ContactListScreen extends Component {
             }} onPress={() => {
                 this.setState({
                     UserDetails: contacts
+                }, () => {
+                    this.setState(prevState => ({
+                        UserDetails: {
+                            ...prevState.UserDetails,
+                            fullAddress: contacts.address.street + ", " + contacts.address.suite + ", " + contacts.address.city + "- " + contacts.address.zipcode
+                        }
+                    }), () => this.bottomSheet.current.show())
                 });
-                this.bottomSheet.current.show()
             }}>
                 <View style={{ flex: 1, flexDirection: 'row', paddingRight: wp('2%') }}>
                     <Avatar rounded title={contacts.name[0]} source={{ uri: "https://randomuser.me/api/portraits/" + (contacts.id % 2 == 0 ? "women/" : "men/") + contacts.id + ".jpg" }} containerStyle={{ padding: hp('1%') }} size="large" />
@@ -131,8 +137,9 @@ class ContactListScreen extends Component {
                             onContentSizeChange={() => { this.flatListRef.scrollToIndex({ animated: true, index: 0 }); }}
                             onLayout={() => { this.flatListRef.scrollToIndex({ animated: true, index: 0 }); }}
                             initialScrollIndex={0}
-                            extraData={this.state.groupSelection}
+                            extraData={DummyData}
                             listKey={(item, index) => 'D' + index.toString()}
+                            keyExtractor={(item, index) => item.id}
                             renderItem={({ item, index }) => this.renderRow(item, index)}
                             numColumns={1}
                         />
@@ -168,6 +175,14 @@ class ContactListScreen extends Component {
                                                 autoCorrect={false}
                                                 // keyboardType=""
                                                 defaultValue={UserDetails.name}
+                                                onChangeText={(name) => {
+                                                    this.setState(prevState => ({
+                                                        UserDetails: {
+                                                            ...prevState.UserDetails,
+                                                            name
+                                                        }
+                                                    }))
+                                                }}
                                                 maxLength={50}
                                                 textContentType="givenName"
                                                 placeholderTextColor={MYColors.placeholderTextColor}
@@ -177,7 +192,7 @@ class ContactListScreen extends Component {
                                         </View>
                                         <Divider />
                                         <View style={{ flexDirection: 'column', alignItems: 'center', paddingVertical: hp('1%'), paddingLeft: wp('2%') }}>
-                                            <Text style={styles.LabelText}>User Name : </Text>
+                                            <Text style={styles.LabelText}>Email : </Text>
 
                                             <Input
                                                 labelStyle={{ ...appStyles.labelInput }}
@@ -185,6 +200,14 @@ class ContactListScreen extends Component {
                                                 autoCorrect={false}
                                                 // keyboardType=""
                                                 defaultValue={UserDetails.email}
+                                                onChangeText={(email) => {
+                                                    this.setState(prevState => ({
+                                                        UserDetails: {
+                                                            ...prevState.UserDetails,
+                                                            email
+                                                        }
+                                                    }))
+                                                }}
                                                 maxLength={12}
                                                 textContentType="givenName"
                                                 placeholderTextColor={MYColors.placeholderTextColor}
@@ -194,20 +217,27 @@ class ContactListScreen extends Component {
                                         </View>
                                         <Divider />
                                         <View style={{ flexDirection: 'column', alignItems: 'center', paddingVertical: hp('1%'), paddingHorizontal: wp('2%') }}>
-                                            <Text style={styles.LabelText}>About : </Text>
+                                            <Text style={styles.LabelText}>Address : </Text>
 
                                             <Input
                                                 labelStyle={{ ...appStyles.labelInput }}
                                                 // containerStyle={{ ...styles.textareaContainer, borderWidth: 1 }}
                                                 inputStyle={{ ...styles.textarea, borderWidth: 1, borderColor: '#ccc', padding: wp('3%'), flex: 1 }}
-                                                onChangeText={(text) => console.log('about edit')}
-                                                // defaultValue={UserDetails.address.street + ", " + UserDetails.address.suite + ", " + UserDetails.address.city + "- " + UserDetails.address.zipcode}
+                                                defaultValue={UserDetails.fullAddress}
                                                 maxLength={100}
+                                                onChangeText={(name) => {
+                                                    this.setState(prevState => ({
+                                                        UserDetails: {
+                                                            ...prevState.UserDetails,
+                                                            fullAddress
+                                                        }
+                                                    }))
+                                                }}
                                                 multiline
                                                 numberOfLines={2}
                                                 autoCapitalize="sentences"
                                                 autoCorrect={false}
-                                                placeholder='About'
+                                                placeholder='Address'
                                                 placeholderTextColor={MYColors.placeholderTextColor}
                                                 underlineColorAndroid={'transparent'}
                                                 inputContainerStyle={{ ...appStyles.formInput, borderWidth: 1, borderBottomWidth: 1, borderColor: MYColors.borderColor }}
@@ -218,7 +248,7 @@ class ContactListScreen extends Component {
                                         <Button
                                             onPress={() => {
                                                 console.log('Edit profile');
-                                                this.setState({ isEdit: false });
+                                                this.setState({ isEdit: false },()=>this.props.editUser(UserDetails));
                                             }}
                                             title='Submit'
                                             raised
@@ -244,13 +274,13 @@ class ContactListScreen extends Component {
                                         </View>
                                         <Divider />
                                         <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: hp('3%'), paddingHorizontal: wp('3%') }}>
-                                            <Text style={styles.LabelText}>User Name : </Text>
+                                            <Text style={styles.LabelText}>Email : </Text>
                                             <Text style={styles.ValueText}>{UserDetails.email}</Text>
                                         </View>
                                         <Divider />
                                         <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: hp('3%'), paddingHorizontal: wp('3%') }}>
-                                            <Text style={styles.LabelText}>About : </Text>
-                                            <Text style={styles.ValueText}>{UserDetails.address.street + ", " + UserDetails.address.suite + ", " + UserDetails.address.city + "- " + UserDetails.address.zipcode}</Text>
+                                            <Text style={styles.LabelText}>Address : </Text>
+                                            <Text style={styles.ValueText}>{UserDetails.fullAddress}</Text>
                                         </View>
                                         <Divider />
 
@@ -287,50 +317,68 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        // fetchUserList: () => dispatch({ type: 'FETCH_USER_LIST' }),
-        fetchProductsBegin: () => dispatch({ type: 'FETCH_PRODUCTS_BEGIN' }),
-        fetchProductsSuccess: (users) => dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: { users } }),
-        fetchProductsFailure: (error) => dispatch({ type: 'FETCH_PRODUCTS_FAILURE', payload: { error } }),
+        fetchUsersBegin: () => dispatch({ type: 'FETCH_USERS_BEGIN' }),
+        fetchUsersSuccess: (users) => dispatch({ type: 'FETCH_USERS_SUCCESS', payload: { users } }),
+        fetchUsersFailure: (error) => dispatch({ type: 'FETCH_USERS_FAILURE', payload: { error } }),
+        editUser: (userDetails) => dispatch({ type: 'EDIT_USER', payload: { userDetails } }),
         deleteUser: (id) => dispatch({ type: 'DELETE_USER', payload: { id } }),
+        dispatch
     }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContactListScreen);
 
-function fakeGetProducts() {
+function fakeGetUsers() {
     var promise = fetch("https://jsonplaceholder.typicode.com/users")
         .then(res => res.json())
-        .then(
-            result => {
-                console.log(1);
-                DummyData = result;
-                console.log(0);
-            },
-            error => {
-                console.log(error);
-            }
-        );
+        .then((responseJson) => {
+            return responseJson
+        })
+        .catch((error) => {
+            return error
+
+        });
     return promise;
 }
 
-function fetchUserList() {
-    console.log(13);
+export function fetchUserList() {
+    // console.log(13);
     return dispatch => {
-        console.log(1);
-        dispatch(fetchProductsBegin());
-        return fakeGetProducts()
+        // console.log(1);
+        dispatch(fetchUsersBegin());
+        return fakeGetUsers()
             .then(
                 users => {
-                    console.log(1);
-                    dispatch(fetchProductsSuccess(users));
+                    // console.log(users);
+                    dispatch(fetchUsersSuccess(users));
                     return users;
                 },
                 error => {
-                    dispatch(fetchProductsFailure(error))
+                    dispatch(fetchUsersFailure(error))
                 }
             );
     };
 }
+
+export const FETCH_USERS_BEGIN = "FETCH_USERS_BEGIN";
+export const FETCH_USERS_SUCCESS =
+    "FETCH_USERS_SUCCESS";
+export const FETCH_USERS_FAILURE =
+    "FETCH_USERS_FAILURE";
+
+export const fetchUsersBegin = () => ({
+    type: FETCH_USERS_BEGIN
+});
+
+export const fetchUsersSuccess = users => ({
+    type: FETCH_USERS_SUCCESS,
+    payload: { users }
+});
+
+export const fetchUsersFailure = error => ({
+    type: FETCH_USERS_FAILURE,
+    payload: { error }
+});
 
 const styles = StyleSheet.create({
     container: {
